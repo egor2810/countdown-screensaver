@@ -1,0 +1,34 @@
+<Window x:Class="CountdownSaver.ConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Заставка с обратным отсчётом — настройки"
+        Width="460" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI" FontSize="14">
+    <StackPanel Margin="20">
+        <TextBlock Text="Заголовок над таймером"/>
+        <TextBox x:Name="TitleBox" Margin="0,4,0,14" Padding="4"/>
+
+        <TextBlock Text="Отсчёт до"/>
+        <Grid Margin="0,4,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
+            <DatePicker x:Name="DateBox" Padding="4" SelectedDateFormat="Long"/>
+            <TextBox x:Name="TimeBox" Grid.Column="1" Margin="8,0,0,0" Padding="4"
+                     VerticalContentAlignment="Center" ToolTip="Время в формате ЧЧ:ММ"/>
+        </Grid>
+
+        <TextBlock Text="Текст, когда время наступило"/>
+        <TextBox x:Name="FinishedBox" Margin="0,4,0,14" Padding="4"/>
+
+        <CheckBox x:Name="ClockBox" Content="Показывать часы и дату" Margin="0,0,0,6"/>
+        <CheckBox x:Name="MediaBox" Content="Показывать «Сейчас играет» (Spotify, браузер и др.)" Margin="0,0,0,6"/>
+        <CheckBox x:Name="MonitorsBox" Content="Показывать на всех мониторах (иначе только на основном)"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Сохранить" Width="110" Padding="0,5" IsDefault="True" Click="OnSave"/>
+            <Button Content="Отмена" Width="110" Padding="0,5" Margin="8,0,0,0" IsCancel="True"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

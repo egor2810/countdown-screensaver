@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "CountdownSaver — сейчас играет",
+  "version": "1.1",
+  "description": "Передаёт заставке CountdownSaver, что играет во вкладках браузера.",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": [
+    "http://127.0.0.1:38211/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "page-hook.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_start"
+    }
+  ]
+}
