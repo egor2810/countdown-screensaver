@@ -19,6 +19,7 @@ public partial class ConfigWindow : Window
         FinishedBox.Text = _settings.FinishedText;
         ClockBox.IsChecked = _settings.ShowClock;
         MediaBox.IsChecked = _settings.ShowMedia;
+        SystemBox.IsChecked = _settings.ShowSystem;
         MonitorsBox.IsChecked = _settings.AllMonitors;
     }
 
@@ -42,6 +43,7 @@ public partial class ConfigWindow : Window
         _settings.FinishedText = FinishedBox.Text.Trim();
         _settings.ShowClock = ClockBox.IsChecked == true;
         _settings.ShowMedia = MediaBox.IsChecked == true;
+        _settings.ShowSystem = SystemBox.IsChecked == true;
         _settings.AllMonitors = MonitorsBox.IsChecked == true;
 
         try

@@ -40,10 +40,11 @@ public static class Program
             app.ShutdownMode = ShutdownMode.OnExplicitShutdown;
             var settings = Settings.Load();
             var media = new MediaWatcher();
+            var system = settings.ShowSystem ? new SystemMonitor() : null;
 
             if (debug)
             {
-                var window = new SaverWindow(null, settings, media, true);
+                var window = new SaverWindow(null, settings, media, system, true);
                 window.Closed += (_, _) => app.Shutdown();
                 window.Show();
             }
@@ -52,12 +53,13 @@ public static class Program
                 foreach (var screen in System.Windows.Forms.Screen.AllScreens)
                 {
                     bool full = screen.Primary || settings.AllMonitors;
-                    new SaverWindow(screen.Bounds, settings, full ? media : null, full).Show();
+                    new SaverWindow(screen.Bounds, settings, full ? media : null, full ? system : null, full).Show();
                 }
             }
 
             if (settings.ShowMedia)
                 media.Start();
+            system?.Start();
             return app.Run();
         }
 

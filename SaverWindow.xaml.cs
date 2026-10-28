@@ -18,6 +18,7 @@ public partial class SaverWindow : Window
     readonly ScreenRect? _bounds;
     readonly Settings _settings;
     readonly Ambient _ambient;
+    readonly SystemMonitor? _system;
     readonly DispatcherTimer _tick = new(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(200) };
     readonly DateTime _shownAt = DateTime.Now;
     Point? _mouseStart;
@@ -28,11 +29,12 @@ public partial class SaverWindow : Window
     bool Debug => _bounds == null;
 
     // bounds == null — отладочный режим: обычное окно, не закрывается от мыши, показывает ошибки.
-    public SaverWindow(ScreenRect? bounds, Settings settings, MediaWatcher? media, bool showContent)
+    public SaverWindow(ScreenRect? bounds, Settings settings, MediaWatcher? media, SystemMonitor? system, bool showContent)
     {
         InitializeComponent();
         _bounds = bounds;
         _settings = settings;
+        _system = system;
         _ambient = new Ambient(AmbientCanvas);
 
         if (bounds is ScreenRect b)
@@ -71,6 +73,10 @@ public partial class SaverWindow : Window
         TitleText.Visibility = string.IsNullOrWhiteSpace(settings.Title) ? Visibility.Collapsed : Visibility.Visible;
         DoneText.Text = settings.FinishedText;
         ClockPanel.Visibility = settings.ShowClock ? Visibility.Visible : Visibility.Collapsed;
+        SystemPanel.Visibility = system != null ? Visibility.Visible : Visibility.Collapsed;
+        CpuLabel.Text = Spaced("ЦП");
+        RamLabel.Text = Spaced("ОЗУ");
+        GpuLabel.Text = Spaced("ГП");
         SetMediaVisible(false, animate: false);
 
         if (media != null)
@@ -100,6 +106,8 @@ public partial class SaverWindow : Window
         if (second == _lastSecond)
             return;
         _lastSecond = second;
+
+        UpdateSystem();
 
         ClockText.Text = now.ToString("HH:mm", Ru);
         DateText.Text = Capitalize(now.ToString("dddd, d MMMM", Ru));
@@ -134,6 +142,42 @@ public partial class SaverWindow : Window
         HoursUnit.Text = Plural(hours, "час", "часа", "часов");
         MinutesUnit.Text = Plural(minutes, "минута", "минуты", "минут");
         SecondsUnit.Text = Plural(seconds, "секунда", "секунды", "секунд");
+    }
+
+    // ---------- Загрузка и температуры ----------
+
+    static readonly Brush NormalTemp = new SolidColorBrush(Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF));
+    static readonly Brush WarmTemp = new SolidColorBrush(Color.FromRgb(0xFF, 0xB7, 0x4D));
+    static readonly Brush HotTemp = new SolidColorBrush(Color.FromRgb(0xFF, 0x6E, 0x6E));
+
+    void UpdateSystem()
+    {
+        if (_system?.Latest is not SystemSnapshot s)
+            return;
+
+        SetLoad(CpuBar, CpuLoadText, s.CpuLoad);
+        SetTemp(CpuExtraText, s.CpuTemp);
+
+        SetLoad(RamBar, RamLoadText, s.RamTotalGb > 0 ? 100 * s.RamUsedGb / s.RamTotalGb : null);
+        RamExtraText.Text = $"{s.RamUsedGb.ToString("0.0", Ru)} / {Math.Round(s.RamTotalGb).ToString(Ru)} ГБ";
+
+        GpuRow.Visibility = s.GpuLoad != null || s.GpuTemp != null ? Visibility.Visible : Visibility.Collapsed;
+        SetLoad(GpuBar, GpuLoadText, s.GpuLoad);
+        SetTemp(GpuExtraText, s.GpuTemp);
+    }
+
+    static void SetLoad(ScaleTransform bar, System.Windows.Controls.TextBlock text, double? percent)
+    {
+        text.Text = percent is double p ? $"{Math.Round(p)}%" : "—";
+        bar.BeginAnimation(ScaleTransform.ScaleXProperty,
+            new DoubleAnimation(Math.Clamp((percent ?? 0) / 100, 0, 1), TimeSpan.FromMilliseconds(600)),
+            HandoffBehavior.SnapshotAndReplace);
+    }
+
+    static void SetTemp(System.Windows.Controls.TextBlock text, double? celsius)
+    {
+        text.Text = celsius is double c ? $"{Math.Round(c)}°" : "";
+        text.Foreground = celsius >= 90 ? HotTemp : celsius >= 80 ? WarmTemp : NormalTemp;
     }
 
     static string Plural(long n, string one, string few, string many)
