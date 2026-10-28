@@ -3,7 +3,7 @@
 const ENDPOINT = "http://127.0.0.1:38211/media";
 const MAX_AGE_MS = 5000;
 const frames = new Map(); // "tabId:frameId" -> { ...state, t }
-let lastSent = 0;
+let sendTimer = null;
 
 const ua = navigator.userAgent;
 const BROWSER = /YaBrowser/.test(ua) ? "Яндекс Браузер"
@@ -16,8 +16,17 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   const key = `${sender.tab.id}:${sender.frameId || 0}`;
   if (message.state) frames.set(key, { ...message.state, t: Date.now() });
   else frames.delete(key);
-  send();
+  scheduleSend();
 });
+
+// Сообщения от разных вкладок и фреймов приходят пачками — отправляем одно на всех, но без задержки.
+function scheduleSend() {
+  if (sendTimer) return;
+  sendTimer = setTimeout(() => {
+    sendTimer = null;
+    send();
+  }, 50);
+}
 
 chrome.tabs.onRemoved.addListener((tabId) => {
   for (const key of [...frames.keys()]) {
@@ -27,8 +36,6 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 function send() {
   const now = Date.now();
-  if (now - lastSent < 900) return;
-  lastSent = now;
 
   for (const [key, value] of frames) {
     if (now - value.t > MAX_AGE_MS) frames.delete(key);

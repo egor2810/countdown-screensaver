@@ -35,6 +35,7 @@ public sealed class MediaWatcher
     string? _coverKey;
     ImageSource? _cover;
     bool _busy;
+    bool _pollAgain;
     string? _lastError;
 
     public event Action<MediaInfo?>? Updated;
@@ -44,6 +45,8 @@ public sealed class MediaWatcher
 
     public async void Start()
     {
+        var dispatcher = Dispatcher.CurrentDispatcher;
+        _bridge.Changed += () => dispatcher.InvokeAsync(async () => await Poll());
         _bridge.Start();
         try
         {
@@ -62,7 +65,11 @@ public sealed class MediaWatcher
     async Task Poll()
     {
         if (_busy)
+        {
+            // Изменение пришло во время опроса — повторим сразу после него.
+            _pollAgain = true;
             return;
+        }
         _busy = true;
         MediaInfo? info = null;
         try
@@ -87,6 +94,11 @@ public sealed class MediaWatcher
         finally
         {
             _busy = false;
+        }
+        if (_pollAgain)
+        {
+            _pollAgain = false;
+            await Poll();
         }
     }
 

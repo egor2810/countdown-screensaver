@@ -11,6 +11,7 @@ public sealed class Settings
     public string FinishedText { get; set; } = "С Новым годом! 🎉";
     public bool ShowClock { get; set; } = true;
     public bool ShowMedia { get; set; } = true;
+    public bool ShowSystem { get; set; } = true;
     public bool AllMonitors { get; set; } = true;
 
     static string FilePath => Path.Combine(

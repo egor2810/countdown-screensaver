@@ -24,6 +24,7 @@
 
         <CheckBox x:Name="ClockBox" Content="Показывать часы и дату" Margin="0,0,0,6"/>
         <CheckBox x:Name="MediaBox" Content="Показывать «Сейчас играет» (Spotify, браузер и др.)" Margin="0,0,0,6"/>
+        <CheckBox x:Name="SystemBox" Content="Показывать загрузку ЦП, ОЗУ, видеокарты и температуры" Margin="0,0,0,6"/>
         <CheckBox x:Name="MonitorsBox" Content="Показывать на всех мониторах (иначе только на основном)"/>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
