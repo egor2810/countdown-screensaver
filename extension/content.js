@@ -4,10 +4,12 @@
   let hooked = null;
   let hookedAt = 0;
   window.addEventListener("message", (event) => {
-    if (event.source !== window || !event.data || !("__countdownSaverTimeline" in event.data)) return;
-    hooked = event.data.__countdownSaverTimeline;
+    // Сайты шлют через postMessage и свои сообщения, в том числе строки — берём только наши.
+    const data = event.data;
+    if (event.source !== window || !data || typeof data !== "object" || !("__countdownSaverTimeline" in data)) return;
+    hooked = data.__countdownSaverTimeline;
     hookedAt = Date.now();
-    if (event.data.changed) push();
+    if (data.changed) push();
   });
 
   function pickArtwork(list) {
