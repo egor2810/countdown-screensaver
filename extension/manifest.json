@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CountdownSaver — сейчас играет",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Передаёт заставке CountdownSaver, что играет во вкладках браузера.",
   "background": {
     "service_worker": "background.js"

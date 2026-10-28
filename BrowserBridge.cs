@@ -28,6 +28,10 @@ public sealed class BrowserBridge
     readonly object _lock = new();
     BrowserTrack? _latest;
 
+    // Сменился трек, пауза/воспроизведение или была перемотка — стоит обновить экран сразу.
+    // Вызывается из фонового потока.
+    public event Action? Changed;
+
     public BrowserTrack? Latest
     {
         get
@@ -159,8 +163,29 @@ public sealed class BrowserBridge
             return;
         }
 
+        BrowserTrack? previous;
         lock (_lock)
+        {
+            previous = _latest;
             _latest = track;
+        }
+        if (IsSignificantChange(previous, track))
+            Changed?.Invoke();
+    }
+
+    static bool IsSignificantChange(BrowserTrack? a, BrowserTrack? b)
+    {
+        if (a == null || b == null)
+            return a != b;
+        if (a.Title != b.Title || a.Artist != b.Artist || a.Artwork != b.Artwork || a.Playing != b.Playing)
+            return true;
+        if (a.Position is double pa && b.Position is double pb)
+        {
+            // Сравниваем с тем, где трек «должен» быть: расхождение больше 2 с — перемотка.
+            double expected = pa + (a.Playing ? (b.ReceivedAt - a.ReceivedAt).TotalSeconds : 0);
+            return Math.Abs(pb - expected) > 2;
+        }
+        return a.Position.HasValue != b.Position.HasValue;
     }
 
     static string? Str(JsonElement e, string name) =>

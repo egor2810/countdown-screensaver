@@ -1,4 +1,4 @@
-// Раз в секунду сообщает фоновому скрипту, что играет в этой вкладке.
+// Сообщает фоновому скрипту, что играет в этой вкладке: раз в секунду и сразу при изменениях.
 (() => {
   // Позиция/длительность от page-hook.js (видит скрытые плееры и setPositionState).
   let hooked = null;
@@ -7,6 +7,7 @@
     if (event.source !== window || !event.data || !("__countdownSaverTimeline" in event.data)) return;
     hooked = event.data.__countdownSaverTimeline;
     hookedAt = Date.now();
+    if (event.data.changed) push();
   });
 
   function pickArtwork(list) {
@@ -49,6 +50,7 @@
     let playing;
     if (session && session.playbackState === "playing") playing = true;
     else if (session && session.playbackState === "paused") playing = false;
+    else if (timeline && typeof timeline.playing === "boolean") playing = timeline.playing;
     else playing = elementPlaying;
 
     // Без метаданных показываем только реально звучащее видео/аудио (по заголовку вкладки).
@@ -58,7 +60,8 @@
     if (!title) return null;
 
     const finite = (x) => (typeof x === "number" && isFinite(x) && x >= 0 ? x : null);
-    const useElement = element && finite(element.duration) && (!timeline || !element.paused);
+    // Позиция от page-hook точнее (учитывает setPositionState и скрытые плееры); элемент в DOM — запасной вариант.
+    const useElement = !timeline && element && finite(element.duration);
     return {
       title,
       artist: (meta && meta.artist) || "",
@@ -70,12 +73,14 @@
     };
   }
 
-  const timer = setInterval(() => {
+  function push() {
     try {
       chrome.runtime.sendMessage({ type: "media", state: snapshot() }).catch(() => {});
     } catch {
       // Расширение перезагрузили — этот экземпляр скрипта больше не нужен.
       clearInterval(timer);
     }
-  }, 1000);
+  }
+
+  const timer = setInterval(push, 1000);
 })();
